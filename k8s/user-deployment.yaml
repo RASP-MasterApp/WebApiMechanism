@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth-container
+          image: us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: auth-secrets
