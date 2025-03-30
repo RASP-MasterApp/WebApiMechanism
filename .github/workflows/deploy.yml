@@ -26,9 +26,11 @@ jobs:
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v1
 
+
     - name: Configure Docker
       run: |
-        gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
 
     - name: Build & Push Docker Images
       run: |
