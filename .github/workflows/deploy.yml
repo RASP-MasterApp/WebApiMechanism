@@ -35,18 +35,20 @@ jobs:
     - name: Build & Push Docker Images
       run: |
         cd authentication
-        docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/authentication:$GITHUB_SHA .
-        docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/authentication:$GITHUB_SHA
+        
+
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
 
         cd ../usermanagement
-        docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/usermanagement:$GITHUB_SHA .
-        docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/usermanagement:$GITHUB_SHA
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
 
     - name: Connect to GKE
       run: |
-        gcloud container clusters get-credentials middleware-cluster --region=${{ secrets.GCP_REGION }}
+        gcloud container clusters get-credentials middleware-cluster --region=us-central1
 
     - name: Update Deployments
       run: |
-        kubectl set image deployment/auth-deployment auth-container=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/authentication:$GITHUB_SHA
-        kubectl set image deployment/user-deployment user-container=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/usermanagement:$GITHUB_SHA
+        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
+        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
