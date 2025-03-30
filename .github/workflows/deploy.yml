@@ -1,53 +1,50 @@
-name: Deploy to GKE
+name: Deploy to GKE via Workload Identity
 
 on:
   push:
     branches: [main]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build-test-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-
-    - name: Authenticate to GCP
+    - name: Authenticate to GCP with Workload Identity
       uses: google-github-actions/auth@v1
       with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        token_format: 'access_token'
+        workload_identity_provider: 'projects/799299962759/locations/global/workloadIdentityPools/github-pool'        
+        service_account: 'github-deploy-sa@southern-surge-453520-q6.iam.gserviceaccount.com'
 
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Configure Docker for Artifact Registry
+    - name: Configure Docker
       run: |
         gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
-    - name: Build and Push Docker Image - Auth
+    - name: Build & Push Docker Images
       run: |
         cd authentication
         docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/authentication:$GITHUB_SHA .
         docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/authentication:$GITHUB_SHA
 
-    - name: Build and Push Docker Image - User
-      run: |
         cd ../usermanagement
         docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/usermanagement:$GITHUB_SHA .
         docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/usermanagement:$GITHUB_SHA
 
-    - name: Connect to GKE Cluster
+    - name: Connect to GKE
       run: |
-        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --region ${{ secrets.GKE_REGION }}
+        gcloud container clusters get-credentials middleware-cluster --region=${{ secrets.GCP_REGION }}
 
-    - name: Deploy New Images to Kubernetes
+    - name: Update Deployments
       run: |
         kubectl set image deployment/auth-deployment auth-container=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/authentication:$GITHUB_SHA
         kubectl set image deployment/user-deployment user-container=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/middleware-repo/usermanagement:$GITHUB_SHA
