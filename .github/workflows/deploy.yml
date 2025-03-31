@@ -37,12 +37,12 @@ jobs:
         cd authentication
         
 
-        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA .
-        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
 
         cd ../user-management
-        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA .
-        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/user-management:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/user-management:$GITHUB_SHA
 
     - name: Install GKE Auth Plugin
       run: |
@@ -61,19 +61,19 @@ jobs:
 
     - name: Deploy to GKE
       run: |
-        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
-        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
+        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
+        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/usermanagement:$GITHUB_SHA
 
     # - name: Connect to GKE and Deploy
     #   run: |
     #     gcloud container clusters get-credentials middleware-cluster --region=us-central1
-    #     kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
-    #     kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
+    #     kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
+    #     kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/usermanagement:$GITHUB_SHA
     #   env:
     #     USE_GKE_GCLOUD_AUTH_PLUGIN: "False"
 
 
     - name: Update Deployments
       run: |
-        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
-        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
+        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
+        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/usermanagement:$GITHUB_SHA
