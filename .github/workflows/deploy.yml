@@ -26,54 +26,42 @@ jobs:
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v1
 
-
-    - name: Configure Docker
+    - name: Configure Docker for Artifact Registry
       run: |
         gcloud auth configure-docker us-central1-docker.pkg.dev
 
-
     - name: Build & Push Docker Images
       run: |
-        cd authentication
-        
-
-        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA .
-        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
+        cd ../authentication
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
 
         cd ../user-management
-        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/user-management:$GITHUB_SHA .
-        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/user-management:$GITHUB_SHA
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA
 
     - name: Install GKE Auth Plugin
       run: |
-        # Install the plugin manually
         curl -sSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-447.0.0-linux-x86_64.tar.gz -o gcloud.tar.gz
         tar -xzf gcloud.tar.gz
         ./google-cloud-sdk/install.sh --quiet
         ./google-cloud-sdk/bin/gcloud components install gke-gcloud-auth-plugin --quiet
         echo "$PWD/google-cloud-sdk/bin" >> $GITHUB_PATH
 
-    - name: Get GKE credentials
+    - name: Get GKE Credentials
       run: |
         gcloud container clusters get-credentials middleware-cluster --region=us-central1
       env:
         USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
-
-    - name: Deploy to GKE
+    - name: Apply K8s Manifests
       run: |
-        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
-        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/usermanagement:$GITHUB_SHA
-
-    # - name: Connect to GKE and Deploy
-    #   run: |
-    #     gcloud container clusters get-credentials middleware-cluster --region=us-central1
-    #     kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
-    #     kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/usermanagement:$GITHUB_SHA
-    #   env:
-    #     USE_GKE_GCLOUD_AUTH_PLUGIN: "False"
+        kubectl apply -f k8s/auth-deployment.yaml
+        kubectl apply -f k8s/auth-service.yaml
+        kubectl apply -f k8s/user-deployment.yaml
+        kubectl apply -f k8s/user-service.yaml
 
 
     - name: Update Deployments
       run: |
-        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/authentication:$GITHUB_SHA
-        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/usermanagement:$GITHUB_SHA
+        kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
+        kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
