@@ -13,34 +13,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: 🧾 Checkout Code
       uses: actions/checkout@v3
 
-    - name: Authenticate to GCP with Workload Identity
+    - name: 🔐 Authenticate to GCP (Workload Identity Federation)
       uses: google-github-actions/auth@v1
       with:
         token_format: 'access_token'
-        workload_identity_provider: 'projects/799299962759/locations/global/workloadIdentityPools/github-pool/providers/github-provider'        
+        workload_identity_provider: 'projects/799299962759/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
         service_account: 'github-deploy-sa@southern-surge-453520-q6.iam.gserviceaccount.com'
 
-    - name: Set up gcloud
+    - name: ☁️ Set up gcloud CLI
       uses: google-github-actions/setup-gcloud@v1
 
-    - name: Configure Docker for Artifact Registry
+    - name: 🔧 Configure Docker to use Artifact Registry
       run: |
         gcloud auth configure-docker us-central1-docker.pkg.dev
 
-    - name: Build & Push Docker Images
+    - name: 🛠️ Build & Push Docker Images
       run: |
         cd authentication
         docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA .
         docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
 
-        cd ../user-management
-        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA .
-        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA
+        cd ../usermanagement
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
 
-    - name: Install GKE Auth Plugin
+    - name: 🔌 Install GKE Auth Plugin (for kubectl)
       run: |
         curl -sSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-447.0.0-linux-x86_64.tar.gz -o gcloud.tar.gz
         tar -xzf gcloud.tar.gz
@@ -48,20 +48,24 @@ jobs:
         ./google-cloud-sdk/bin/gcloud components install gke-gcloud-auth-plugin --quiet
         echo "$PWD/google-cloud-sdk/bin" >> $GITHUB_PATH
 
-    - name: Get GKE Credentials
+    - name: 🔑 Get GKE Cluster Credentials
       run: |
         gcloud container clusters get-credentials middleware-cluster --region=us-central1
       env:
         USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
-    - name: Apply K8s Manifests
+
+    - name: 🚀 Apply K8s Manifests
       run: |
         kubectl apply -f k8s/auth-deployment.yaml
         kubectl apply -f k8s/auth-service.yaml
+
+        # Recreate user-deployment if immutable field change detected
+        kubectl delete deployment user-deployment --ignore-not-found
         kubectl apply -f k8s/user-deployment.yaml
+
         kubectl apply -f k8s/user-service.yaml
 
-
-    - name: Update Deployments
+    - name: 🔄 Update Images in Running Deployments
       run: |
         kubectl set image deployment/auth-deployment auth-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
         kubectl set image deployment/user-deployment user-container=us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
