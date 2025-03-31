@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: auth-container
-          image: us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user:latest
+          image: us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-cluster/user:latest
           ports:
             - containerPort: 3000
           envFrom:
