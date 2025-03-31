@@ -36,9 +36,9 @@ jobs:
         docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA .
         docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/authentication:$GITHUB_SHA
 
-        cd ../usermanagement
-        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA .
-        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/usermanagement:$GITHUB_SHA
+        cd ../user-management
+        docker build -t us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA .
+        docker push us-central1-docker.pkg.dev/southern-surge-453520-q6/middleware-repo/user-management:$GITHUB_SHA
 
     - name: 🔌 Install GKE Auth Plugin (for kubectl)
       run: |
